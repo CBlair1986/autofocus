@@ -8,11 +8,18 @@ class AutoFocusCommandLine
         options = OpenStruct.new
         opts = OptionParser.new
 
+        options.filename = "autofocus"
+
         opts.on("-a","--add STRING","Add an item to the end of the list",
                 String)\
         do |v|
             options.add_flag = true
             options.add_content = v
+        end
+
+        opts.on("--file String","Specify a different file to use.", String)\
+        do |v|
+            options.filename = v
         end
 
         opts.on("-c", "--change NUMBER",
@@ -59,7 +66,7 @@ class AutoFocusCommandLine
         begin
         options.rest = opts.parse(args)
         # perform_sanity_check(options)
-        list = File.new("autofocus","r+")
+        list = File.new(options.filename,"a+")
         process(options,list)
         rescue Exception
             raise
