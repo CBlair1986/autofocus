@@ -20,7 +20,7 @@ class AutoFocusCommandLine
                 "  eg. to fix a typo.", Integer)\
         do |v|
             options.change_flag = true
-            options.change_number = v
+            options.change_number = v + 1
         end
 
         opts.on("-l", "--list", "List a 'page' of actions, defaulting to the",
@@ -29,11 +29,16 @@ class AutoFocusCommandLine
             options.list_flag = true
         end
 
+        opts.on("-n", "--numbers", "Used with -l, shows the numbers of the actions.")\
+        do
+            options.numbers_flag = true
+        end
+
         opts.on("-m", "--mark NUMBER", "Mark the numbered entry as done.",
                 Integer)\
         do |v|
             options.mark_flag = true
-            options.mark_number = v
+            options.mark_number = v + 1
         end
 
         opts.on("-u", "--follow STRING",
@@ -47,28 +52,53 @@ class AutoFocusCommandLine
 
         opts.on_tail("-h", "--help", "Display this message.") do |v|
             puts opts
+            options.help_flag = true
             exit
         end
 
         begin
         options.rest = opts.parse(args)
-        perform_sanity_check(options)
-        rescue StandardError => e
-            puts e.to_s
-            exit
+        # perform_sanity_check(options)
+        list = File.new("autofocus","r+")
+        process(options,list)
+        rescue Exception
+            raise
         ensure
+            list.close unless(options.help_flag)
         end
 
         options
     end # self.parse()
 
-    def self.perform_sanity_check(options_struct)
-        if !options_struct.mark_flag && options_struct.follow_flag
-            raise ArgumentError, "Cannot use -u without -m."
+    # def self.perform_sanity_check(options_struct)
+    #     if !options_struct.mark_flag && options_struct.follow_flag
+    #         raise ArgumentError, "Cannot use -u without -m."
+    #     end
+    # end # self.perform_sanity_check(options_struct)
+
+    def self.process(options, file)
+        if (options.list_flag && options.numbers_flag)
+            # Do listing with numbers.
+            lines = file.lines.to_a
+            lines = lines.zip((1..(lines.length)).to_a)
+            nlines = lines.map{|v,i| "#{i}-> #{v}"}
+            puts nlines.join()
+        elsif (options.list_flag)
+            # Do listing
+            lines = file.lines.to_a
+            puts lines.join()
+        elsif (options.add_flag)
+            # Do addition
+        elsif (options.change_flag && options.change_number)
+            # Do change
+        elsif (options.mark_flag && options.mark_number && options.follow_flag)
+            # Do mark and follow
+        elsif (options.mark_flag && options.mark_number)
+            # Do plain mark
+        else
+            raise ArgumentError, "I don't know what you mean."
         end
-    end # self.perform_sanity_check(options_struct)
+    end
 end # class AutoFocusCommandLine
 
 options = AutoFocusCommandLine.parse(ARGV)
-puts options
-puts Dir.pwd()
