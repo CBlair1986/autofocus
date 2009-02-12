@@ -1,17 +1,22 @@
 #!/usr/bin/env ruby
 
-# TODO: implement -a, -m, -c, -f
+# Autofocus Computerized Automation System
+# Author: CBlair1986@gmail.com
 
 require 'optparse'
 require 'ostruct'
 
-class AutoFocusCommandLine
+# Main class, contains all of the functionality. In comments, I will abbreviate
+# the name to ACAS.
+class AutofocusComputerizedAutomationSystem
+    # Parses command-line options, sets requisite variables in options
     def self.parse(args)
         options = OpenStruct.new
         opts = OptionParser.new
 
         options.filename = File.dirname($0) << "/autofocus"
 
+        # Section handling adding an item
         opts.on("-a","--add STRING","Add an item to the end of the list",
                 String)\
                 do |v|
@@ -19,11 +24,14 @@ class AutoFocusCommandLine
             options.add_content = v
                 end
 
+        # Provides the ability to use a different file, for management of
+        # different lists.
         opts.on("--file String","Specify a different file to use.", String)\
             do |v|
             options.filename = v
             end
 
+        # Handles changing an item
         opts.on("-c", "--change NUMBER",
                 "Change the numbered entry to something else,",
                 "  eg. to fix a typo.", Integer)\
@@ -32,17 +40,20 @@ class AutoFocusCommandLine
             options.change_number = v - 1
                 end
 
+        # Handles listing of the items
         opts.on("-l", "--list", "List a 'page' of actions, defaulting to the",
                 "  first one with pending actions on it.")\
                 do
             options.list_flag = true
                 end
 
+        # Sets a switch to show item numbers in the list
         opts.on("-n", "--numbers", "Used with -l, shows the numbers of the actions.")\
             do
             options.numbers_flag = true
             end
 
+        # Handles marking an item as done
         opts.on("-m", "--mark NUMBER", "Mark the numbered entry as done.",
                 Integer)\
                 do |v|
@@ -50,6 +61,7 @@ class AutoFocusCommandLine
             options.mark_number = v - 1
                 end
 
+        # Handles un-marking an item.
         opts.on("-u","--unmark NUMBER", "UN-Mark the numbered entry.",
                 Integer)\
                 do |v|
@@ -57,6 +69,7 @@ class AutoFocusCommandLine
             options.unmark_number = v - 1
                 end
 
+        # Option to add a follow-up item. Its behavior is due to be changed...
         opts.on("-f", "--follow",
                 "Used in conjunction with -m, this will add a",
                 "  new action to the end of the list, for",
@@ -65,9 +78,15 @@ class AutoFocusCommandLine
             options.follow_flag = true
                 end
 
+        # Show help
         opts.on_tail("-h", "--help", "Display this message.") do |v|
             puts opts
             options.help_flag = true
+            exit
+        end
+
+        if (args.empty?)
+            puts opts
             exit
         end
 
@@ -147,6 +166,8 @@ class AutoFocusCommandLine
                 raise ArgumentError, "No file."
             end
         elsif (options.mark_flag && options.mark_number && options.follow_flag)
+            # TODO If options.rest doesn't exist, simply duplicate the old
+            # action
             lines = nil
             File.open(filename,"r+") do |file|
                 # Do mark and follow
@@ -155,7 +176,11 @@ class AutoFocusCommandLine
             line = lines[options.mark_number]
             newline = line.gsub(/\[ \]/, "[*]")
             lines[options.mark_number] = newline
-            followline = "[ ] " << options.rest.join(" ")
+            if options.rest.length > 0
+                followline = "[ ] " << options.rest.join(" ")
+            else
+                followline = line
+            end
             File.open(filename,"w") do |file|
                 file.write lines.reverse
                 file.puts followline
@@ -190,4 +215,4 @@ class AutoFocusCommandLine
     end # self.process(options, filename)
 end # class AutoFocusCommandLine
 
-options = AutoFocusCommandLine.parse(ARGV)
+options = AutofocusComputerizedAutomationSystem.parse(ARGV)
