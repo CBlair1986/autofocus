@@ -10,7 +10,7 @@ class AutoFocusCommandLine
         options = OpenStruct.new
         opts = OptionParser.new
 
-        options.filename = "autofocus"
+        options.filename = File.dirname($0) << "/autofocus"
 
         opts.on("-a","--add STRING","Add an item to the end of the list",
                 String)\
@@ -48,6 +48,13 @@ class AutoFocusCommandLine
                 do |v|
             options.mark_flag = true
             options.mark_number = v - 1
+                end
+
+        opts.on("-u","--unmark NUMBER", "UN-Mark the numbered entry.",
+                Integer)\
+                do |v|
+            options.unmark_flag = true
+            options.unmark_number = v - 1
                 end
 
         opts.on("-f", "--follow",
@@ -162,6 +169,18 @@ class AutoFocusCommandLine
             line = lines[options.mark_number]
             newline = line.gsub(/\[ \]/, "[*]")
             lines[options.mark_number] = newline
+            File.open(filename,"w") do |file|
+                file.write lines.reverse
+            end
+        elsif (options.unmark_flag && options.unmark_number)
+            lines = nil
+            File.open(filename,"r") do |file|
+                # Do unmark
+                lines = file.readlines.reverse
+            end
+            line = lines[options.unmark_number]
+            newline = line.gsub(/\[\*\]/,"[ ]")
+            lines[options.unmark_number] = newline
             File.open(filename,"w") do |file|
                 file.write lines.reverse
             end
