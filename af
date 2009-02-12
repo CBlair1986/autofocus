@@ -79,20 +79,21 @@ class AutofocusComputerizedAutomationSystem
                 end
 
         # Show help
-        opts.on_tail("-h", "--help", "Display this message.") do |v|
+        opts.on_tail("-h", "--help", "--usage", "Display this message.") do |v|
             puts opts
             options.help_flag = true
             exit
         end
 
+        # If there are no arguments, show the help info and exit
         if (args.empty?)
             puts opts
             exit
         end
 
+        # The entry point for the logic. It will raise any errors that are raised.
         begin
             options.rest = opts.parse(args)
-            # perform_sanity_check(options)
             process(options,options.filename)
         rescue Exception
             raise
@@ -101,14 +102,10 @@ class AutofocusComputerizedAutomationSystem
         options
     end # self.parse()
 
-    # def self.perform_sanity_check(options_struct)
-    #     if !options_struct.mark_flag && options_struct.follow_flag
-    #         raise ArgumentError, "Cannot use -u without -m."
-    #     end
-    # end # self.perform_sanity_check(options_struct)
-
+    # Main program logic
     def self.process(options, filename)
         if (options.list_flag && options.numbers_flag)
+            # We are listing with numbers
             File.open(filename) do |file|
                 # Do listing with numbers.
                 lines = file.lines.to_a.reverse
@@ -119,12 +116,14 @@ class AutofocusComputerizedAutomationSystem
                 puts nlines.join()
             end
         elsif (options.list_flag)
+            # We are listing without numbers
             File.open(filename) do |file|
                 # Do listing
                 lines = file.lines.to_a
                 puts lines.join()
             end
         elsif (options.add_flag)
+            # We are adding an item
             File.open(filename,"a+") do |file|
                 # Do addition
                 # If there are no other flags, then I can assume that options.rest
@@ -145,6 +144,7 @@ class AutofocusComputerizedAutomationSystem
                 end
             end
         elsif (options.change_flag && options.change_number)
+            # We are changing an item
             if (File.exist?(filename))
                 lines, lines_prev, lines_next = nil
                 File.open(filename,"r") do |file|
@@ -166,8 +166,8 @@ class AutofocusComputerizedAutomationSystem
                 raise ArgumentError, "No file."
             end
         elsif (options.mark_flag && options.mark_number && options.follow_flag)
-            # TODO If options.rest doesn't exist, simply duplicate the old
-            # action
+            # Handle Follow-up items. Used with the mark command. If
+            # options.rest is empty, it simply duplicates 
             lines = nil
             File.open(filename,"r+") do |file|
                 # Do mark and follow
@@ -186,6 +186,7 @@ class AutofocusComputerizedAutomationSystem
                 file.puts followline
             end
         elsif (options.mark_flag && options.mark_number)
+            # We are marking an item as done
             lines = nil
             File.open(filename,"r+") do |file|
                 # Do plain mark
@@ -198,6 +199,7 @@ class AutofocusComputerizedAutomationSystem
                 file.write lines.reverse
             end
         elsif (options.unmark_flag && options.unmark_number)
+            # We are unmarking an item
             lines = nil
             File.open(filename,"r") do |file|
                 # Do unmark
@@ -210,6 +212,7 @@ class AutofocusComputerizedAutomationSystem
                 file.write lines.reverse
             end
         else
+            # We don't understand!
             raise ArgumentError, "I don't know what you mean."
         end
     end # self.process(options, filename)
