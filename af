@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+opts = OptionParser.new
+opts.on("-a", "--add STRING",
+        "Add an item to the end of the list.", Array)\
+        {|val| add_string(val.join(" "))}
+
+def add_string( a_string )
+    puts a_string
+end
+
+opts.parse(ARGV)
