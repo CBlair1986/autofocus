@@ -14,50 +14,49 @@ class AutoFocusCommandLine
 
         opts.on("-a","--add STRING","Add an item to the end of the list",
                 String)\
-        do |v|
+                do |v|
             options.add_flag = true
             options.add_content = v
-        end
+                end
 
         opts.on("--file String","Specify a different file to use.", String)\
-        do |v|
+            do |v|
             options.filename = v
-        end
+            end
 
         opts.on("-c", "--change NUMBER",
                 "Change the numbered entry to something else,",
                 "  eg. to fix a typo.", Integer)\
-        do |v|
+                do |v|
             options.change_flag = true
             options.change_number = v - 1
-        end
+                end
 
         opts.on("-l", "--list", "List a 'page' of actions, defaulting to the",
                 "  first one with pending actions on it.")\
-        do
+                do
             options.list_flag = true
-        end
+                end
 
         opts.on("-n", "--numbers", "Used with -l, shows the numbers of the actions.")\
-        do
+            do
             options.numbers_flag = true
-        end
+            end
 
         opts.on("-m", "--mark NUMBER", "Mark the numbered entry as done.",
                 Integer)\
-        do |v|
+                do |v|
             options.mark_flag = true
             options.mark_number = v - 1
-        end
+                end
 
-        opts.on("-f", "--follow STRING",
+        opts.on("-f", "--follow",
                 "Used in conjunction with -m, this will add a",
                 "  new action to the end of the list, for",
-                "  follow-up procedure.", String)\
-        do |v|
+                "  follow-up procedure.")\
+                do |v|
             options.follow_flag = true
-            options.follow_content = v
-        end
+                end
 
         opts.on_tail("-h", "--help", "Display this message.") do |v|
             puts opts
@@ -66,9 +65,9 @@ class AutoFocusCommandLine
         end
 
         begin
-        options.rest = opts.parse(args)
-        # perform_sanity_check(options)
-        process(options,options.filename)
+            options.rest = opts.parse(args)
+            # perform_sanity_check(options)
+            process(options,options.filename)
         rescue Exception
             raise
         end
@@ -86,8 +85,9 @@ class AutoFocusCommandLine
         if (options.list_flag && options.numbers_flag)
             File.open(filename) do |file|
                 # Do listing with numbers.
-                lines = file.lines.to_a
+                lines = file.lines.to_a.reverse
                 lines = lines.zip((1..(lines.length)).to_a)
+                lines = lines.reverse
                 max_length = (lines.length+1).to_s.length
                 nlines = lines.map{|v,i| "#{i.to_s.ljust(max_length)} -> #{v}"}
                 puts nlines.join()
@@ -108,10 +108,10 @@ class AutoFocusCommandLine
                 unless (options.change_flag || options.list_flag ||
                         options.mark_flag || options.follow_flag)
                     if (options.rest)
-                        puts "#{line}-> " << '[ ] ' << options.add_content << ' ' << options.rest.join(" ")
+                        puts "1 -> " << '[ ] ' << options.add_content << ' ' << options.rest.join(" ")
                         file.puts '[ ] ' << options.add_content << ' ' << options.rest.join(" ")
                     else
-                        puts "#{line}-> " << '[ ] ' << options.add_content
+                        puts "1 -> " << '[ ] ' << options.add_content
                         file.puts '[ ] ' << options.add_content
                     end
                 else
@@ -119,29 +119,56 @@ class AutoFocusCommandLine
                 end
             end
         elsif (options.change_flag && options.change_number)
-            File.open(filename,"r+") do |file|
-                # Do change
-                # Basically the same as list, except we seek to the line number (to
-                # which one has already been added), and change the entire line to
-                # be something new.
-                # options.rest is assumed to be the changed line.
-                lines = file.readlines
-                lines_prev = lines[0...(options.change_number)]
-                lines_next = lines[(options.change_number + 1)..(lines.length)]
-                puts lines_prev, options.rest.join(" "), lines_next
+            if (File.exist?(filename))
+                lines, lines_prev, lines_next = nil
+                File.open(filename,"r") do |file|
+                    # Do change
+                    # Basically the same as list, except we seek to the line number (to
+                    # which one has already been added), and change the entire line to
+                    # be something new.
+                    # options.rest is assumed to be the changed line.
+                    lines = file.readlines.reverse
+                end
+                lines[options.change_number] = "[ ] " << options.rest.join(" ") << "\n"
+                File.open(filename,"w") do |file|
+                    # This'll be where we write the new file. It's a bit
+                    # clunky, but I'm not going to have files over 100
+                    # Megabytes, I think.
+                    file.write lines.reverse
+                end
+            else
+                raise ArgumentError, "No file."
             end
         elsif (options.mark_flag && options.mark_number && options.follow_flag)
+            lines = nil
             File.open(filename,"r+") do |file|
-            # Do mark and follow
+                # Do mark and follow
+                lines = file.readlines.reverse
+            end
+            line = lines[options.mark_number]
+            newline = line.gsub(/\[ \]/, "[*]")
+            lines[options.mark_number] = newline
+            followline = "[ ] " << options.rest.join(" ")
+            File.open(filename,"w") do |file|
+                file.write lines.reverse
+                file.puts followline
             end
         elsif (options.mark_flag && options.mark_number)
+            lines = nil
             File.open(filename,"r+") do |file|
-            # Do plain mark
+                # Do plain mark
+                lines = file.readlines.reverse
+            end
+            line = lines[options.mark_number]
+            newline = line.gsub(/\[ \]/, "[*]")
+            lines[options.mark_number] = newline
+            File.open(filename,"w") do |file|
+                file.write lines.reverse
             end
         else
             raise ArgumentError, "I don't know what you mean."
         end
-    end
+    end # self.process(options, filename)
 end # class AutoFocusCommandLine
 
 options = AutoFocusCommandLine.parse(ARGV)

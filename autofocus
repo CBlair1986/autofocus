@@ -1,11 +1,8 @@
 [ ] Prototype Regions for possible solutions
 [ ] Figure out all the requirements for Regions
 [ ] Layout CZMud class some more
-[ ] Investigate Autofocus file formats (ACAS)
-[ ] Investigate possible procedures using AF (ACAS)
+[*] Investigate Autofocus file formats (ACAS)
+[*] Investigate possible procedures using AF (ACAS)
 [ ] Catch up with _Tape_
 [ ] Read some VIM help files
-[ ] This would also be normal usage
-[ ] This would also be normal usage
-[ ] This would also be normal usage
-[ ] Something to add
+[ ] Refine the current ACAS program
