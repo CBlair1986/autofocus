@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# TODO: implement -a, -m, -c, -f
+
 require 'optparse'
 require 'ostruct'
 
@@ -27,7 +29,7 @@ class AutoFocusCommandLine
                 "  eg. to fix a typo.", Integer)\
         do |v|
             options.change_flag = true
-            options.change_number = v + 1
+            options.change_number = v - 1
         end
 
         opts.on("-l", "--list", "List a 'page' of actions, defaulting to the",
@@ -45,10 +47,10 @@ class AutoFocusCommandLine
                 Integer)\
         do |v|
             options.mark_flag = true
-            options.mark_number = v + 1
+            options.mark_number = v - 1
         end
 
-        opts.on("-u", "--follow STRING",
+        opts.on("-f", "--follow STRING",
                 "Used in conjunction with -m, this will add a",
                 "  new action to the end of the list, for",
                 "  follow-up procedure.", String)\
@@ -66,12 +68,9 @@ class AutoFocusCommandLine
         begin
         options.rest = opts.parse(args)
         # perform_sanity_check(options)
-        list = File.new(options.filename,"a+")
-        process(options,list)
+        process(options,options.filename)
         rescue Exception
             raise
-        ensure
-            list.close unless(options.help_flag)
         end
 
         options
@@ -83,25 +82,62 @@ class AutoFocusCommandLine
     #     end
     # end # self.perform_sanity_check(options_struct)
 
-    def self.process(options, file)
+    def self.process(options, filename)
         if (options.list_flag && options.numbers_flag)
-            # Do listing with numbers.
-            lines = file.lines.to_a
-            lines = lines.zip((1..(lines.length)).to_a)
-            nlines = lines.map{|v,i| "#{i}-> #{v}"}
-            puts nlines.join()
+            File.open(filename) do |file|
+                # Do listing with numbers.
+                lines = file.lines.to_a
+                lines = lines.zip((1..(lines.length)).to_a)
+                max_length = (lines.length+1).to_s.length
+                nlines = lines.map{|v,i| "#{i.to_s.ljust(max_length)} -> #{v}"}
+                puts nlines.join()
+            end
         elsif (options.list_flag)
-            # Do listing
-            lines = file.lines.to_a
-            puts lines.join()
+            File.open(filename) do |file|
+                # Do listing
+                lines = file.lines.to_a
+                puts lines.join()
+            end
         elsif (options.add_flag)
-            # Do addition
+            File.open(filename,"a+") do |file|
+                # Do addition
+                # If there are no other flags, then I can assume that options.rest
+                # is an additional array of strings, since the user was too lazy to
+                # use quotes on the commandline. (Or he forgot)
+                line = file.lines.to_a.length + 1
+                unless (options.change_flag || options.list_flag ||
+                        options.mark_flag || options.follow_flag)
+                    if (options.rest)
+                        puts "#{line}-> " << '[ ] ' << options.add_content << ' ' << options.rest.join(" ")
+                        file.puts '[ ] ' << options.add_content << ' ' << options.rest.join(" ")
+                    else
+                        puts "#{line}-> " << '[ ] ' << options.add_content
+                        file.puts '[ ] ' << options.add_content
+                    end
+                else
+                    raise ArgumentError, "Too many commands."
+                end
+            end
         elsif (options.change_flag && options.change_number)
-            # Do change
+            File.open(filename,"r+") do |file|
+                # Do change
+                # Basically the same as list, except we seek to the line number (to
+                # which one has already been added), and change the entire line to
+                # be something new.
+                # options.rest is assumed to be the changed line.
+                lines = file.readlines
+                lines_prev = lines[0...(options.change_number)]
+                lines_next = lines[(options.change_number + 1)..(lines.length)]
+                puts lines_prev, options.rest.join(" "), lines_next
+            end
         elsif (options.mark_flag && options.mark_number && options.follow_flag)
+            File.open(filename,"r+") do |file|
             # Do mark and follow
+            end
         elsif (options.mark_flag && options.mark_number)
+            File.open(filename,"r+") do |file|
             # Do plain mark
+            end
         else
             raise ArgumentError, "I don't know what you mean."
         end
