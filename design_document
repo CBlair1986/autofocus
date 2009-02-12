@@ -9,3 +9,14 @@ I intend to create a computerized version of the Autofocus system, one that is p
 h2. Format
 
 I will have to implement a sensible, no-nonsense format for the files to have. I would prefer the file to be human editable, and easy to parse, so that when/if the time comes to switch systems to something new, it won't be a hassle.
+
+h2. Process
+
+What is a good process model to use with this sort of program? Obviously, it would need to implement add, done and alter commands, and it would store the list in a simple file structure. But what else could I keep track of using this? How about a simple timestamping system that would let me track activity? That would be a nice idea. So far:
+* Add action
+* Alter action (beware typos)
+* List a 'page' of actions
+* Mark an action as done, optionally adding a follow-up to the end of the list.
+* Simple timestamp system.
+
+The original system description seems to really be into the idea of using the pages as a way to partition the list of activities. The article states that a page length of 25 to 35 lines is ideal, so I think that would be a good figure to start with. Of course, this is terminal based, so I might try to stick to an 80x24 view... We'll see.

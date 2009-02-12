@@ -1,14 +1,74 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+require 'ostruct'
 
-opts = OptionParser.new
-opts.on("-a", "--add STRING",
-        "Add an item to the end of the list.", Array)\
-        {|val| add_string(val.join(" "))}
+class AutoFocusCommandLine
+    def self.parse(args)
+        options = OpenStruct.new
+        opts = OptionParser.new
 
-def add_string( a_string )
-    puts a_string
-end
+        opts.on("-a","--add STRING","Add an item to the end of the list",
+                String)\
+        do |v|
+            options.add_flag = true
+            options.add_content = v
+        end
 
-opts.parse(ARGV)
+        opts.on("-c", "--change NUMBER",
+                "Change the numbered entry to something else,",
+                "  eg. to fix a typo.", Integer)\
+        do |v|
+            options.change_flag = true
+            options.change_number = v
+        end
+
+        opts.on("-l", "--list", "List a 'page' of actions, defaulting to the",
+                "  first one with pending actions on it.")\
+        do
+            options.list_flag = true
+        end
+
+        opts.on("-m", "--mark NUMBER", "Mark the numbered entry as done.",
+                Integer)\
+        do |v|
+            options.mark_flag = true
+            options.mark_number = v
+        end
+
+        opts.on("-u", "--follow STRING",
+                "Used in conjunction with -m, this will add a",
+                "  new action to the end of the list, for",
+                "  follow-up procedure.", String)\
+        do |v|
+            options.follow_flag = true
+            options.follow_content = v
+        end
+
+        opts.on_tail("-h", "--help", "Display this message.") do |v|
+            puts opts
+            exit
+        end
+
+        begin
+        options.rest = opts.parse(args)
+        perform_sanity_check(options)
+        rescue StandardError => e
+            puts e.to_s
+            exit
+        ensure
+        end
+
+        options
+    end # self.parse()
+
+    def self.perform_sanity_check(options_struct)
+        if !options_struct.mark_flag && options_struct.follow_flag
+            raise ArgumentError, "Cannot use -u without -m."
+        end
+    end # self.perform_sanity_check(options_struct)
+end # class AutoFocusCommandLine
+
+options = AutoFocusCommandLine.parse(ARGV)
+puts options
+puts Dir.pwd()
