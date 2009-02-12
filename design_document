@@ -1,0 +1,11 @@
+This file is written in textile, as to be better suited for online documentation later, when it is converted to HTML.
+
+h1. Autofocus
+
+h2. Intent
+
+I intend to create a computerized version of the Autofocus system, one that is portable, simple, and human-executable, if need arises.
+
+h2. Format
+
+I will have to implement a sensible, no-nonsense format for the files to have. I would prefer the file to be human editable, and easy to parse, so that when/if the time comes to switch systems to something new, it won't be a hassle.
