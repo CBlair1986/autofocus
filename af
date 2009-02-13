@@ -113,14 +113,18 @@ class AutofocusComputerizedAutomationSystem
                 lines = lines.reverse
                 max_length = (lines.length+1).to_s.length
                 nlines = lines.map{|v,i| "#{i.to_s.ljust(max_length)} -> #{v}"}
-                puts nlines.join()
+                nlines.each do |line|
+                    display_line(line)
+                end
             end
         elsif (options.list_flag)
             # We are listing without numbers
             File.open(filename) do |file|
                 # Do listing
                 lines = file.lines.to_a
-                puts lines.join()
+                lines.each do |line|
+                    display_line(line)
+                end
             end
         elsif (options.add_flag)
             # We are adding an item
@@ -216,6 +220,21 @@ class AutofocusComputerizedAutomationSystem
             raise ArgumentError, "I don't know what you mean."
         end
     end # self.process(options, filename)
+
+    def self.display_line( a_string )
+        if /\[\*\]/ =~ a_string
+            # Display the line with a subtler color
+            # With ANSI code? Sure, why not.
+            subtle_color = "\e[90m"
+            end_color = "\e[m"
+            print subtle_color
+            puts a_string
+            print end_color
+        else
+            # Display the line full-on
+            puts a_string
+        end
+    end # self.display_line( a_string )
 end # class AutoFocusCommandLine
 
 options = AutofocusComputerizedAutomationSystem.parse(ARGV)
