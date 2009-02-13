@@ -235,6 +235,6 @@ class AutofocusComputerizedAutomationSystem
             puts a_string
         end
     end # self.display_line( a_string )
-end # class AutoFocusCommandLine
+end # class AutofocusComputerizedAutomationSystem
 
 options = AutofocusComputerizedAutomationSystem.parse(ARGV)
